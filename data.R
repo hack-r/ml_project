@@ -14,7 +14,9 @@ train <- read.csv("train.csv")
 test  <- read.csv("test.csv")
 
 # Clean Up the Data -------------------------------------------------------
-
+test$X      <- NULL
+train$X     <- NULL
+train.clean <- train[,colSums(is.na(train)) > .5 * nrow(train)]
 
 # Save Image --------------------------------------------------------------
 save.image("ml_project_data.Rdata")
