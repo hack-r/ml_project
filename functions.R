@@ -15,7 +15,6 @@ require(rattle)
 require(sqldf)
 require(tm)
 
-
 # Custom Functions --------------------------------------------------------
 ml_write_files = function(x){
   n = length(x)
