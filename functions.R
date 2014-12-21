@@ -4,10 +4,10 @@
 
 
 # Load Libraries ----------------------------------------------------------
-require(bioconductor)
 require(caret)
 require(data.table)
 require(MASS)
+require(mlogit)
 require(grid)
 require(gtable)
 require(rpart)

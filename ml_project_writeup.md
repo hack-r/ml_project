@@ -17,6 +17,9 @@ The scripts I used in this project are:
 1. functions.R -- which loads my libraries and custom functions
 2. data.R -- which imports and cleans the data
 3. run_analysis.R -- which builds and executes my machine learning algorithm
+
+## Outcome
+The outcome variable was `classe`, which categorizes the manner in which exercisers completed their exercises.
  
 ## Getting the Data
 ### Reading Data
@@ -41,6 +44,34 @@ This included removing columns of junk data, such as those which contained mostl
 test$X      <- NULL
 train$X     <- NULL
 train.clean <- train[,colSums(is.na(train)) > .5 * nrow(train)]
+```
+
+## Libraries and Functions
+I called in a number of R packages (libraries), a subset of which was used in the final analysis, and defined one custom function.
+
+```{r}
+# Load Libraries ----------------------------------------------------------
+require(caret)
+require(data.table)
+require(MASS)
+require(mlogit)
+require(grid)
+require(gtable)
+require(rpart)
+require(rattle)
+require(sqldf)
+require(tm)
+
+
+# Custom Functions --------------------------------------------------------
+ml_write_files = function(x){
+  n = length(x)
+  for(i in 1:n){
+    filename = paste0("problem_id_",i,".txt")
+    write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+  }
+}
+
 ```
 
 ## Model Building
