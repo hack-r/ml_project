@@ -69,19 +69,58 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 <h2>R Scripts</h2>
 <p>The scripts I used in this project are: 1. functions.R – which loads my libraries and custom functions 2. data.R – which imports and cleans the data 3. run_analysis.R – which builds and executes my machine learning algorithm</p>
 </div>
+<div id="outcome" class="section level2">
+<h2>Outcome</h2>
+<p>The outcome variable was <code>classe</code>, which categorizes the manner in which exercisers completed their exercises.</p>
+</div>
 <div id="getting-the-data" class="section level2">
 <h2>Getting the Data</h2>
 <div id="reading-data" class="section level3">
 <h3>Reading Data</h3>
-<p>The first step of this project was to import the test and training datasets from the Internet</p>
-<pre class="r"><code>#download.file (&quot;https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv&quot;,
-#               destfile = &quot;train.csv&quot;)
-#download.file(&quot;https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv&quot;,
-#              destfile = &quot;test.csv&quot;)
-
-train &lt;- read.csv(&quot;train.csv&quot;)
-test  &lt;- read.csv(&quot;test.csv&quot;)</code></pre>
+<p>The first step of this project was to import the test and training datasets from the Internet:</p>
+<p>```{r} # Grab from the Internet ————————————————– #download.file (“<a href="https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv">https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv</a>”, # destfile = “train.csv”) #download.file(“<a href="https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv">https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv</a>”, # destfile = “test.csv”)</p>
 </div>
+</div>
+</div>
+<div id="read-csvs" class="section level1">
+<h1>Read CSV’s ————————————————————–</h1>
+<p>train &lt;- read.csv(“train.csv”) test &lt;- read.csv(“test.csv”) ```</p>
+<div id="cleaning-the-data" class="section level3">
+<h3>Cleaning the Data</h3>
+<p>The next step was to manipulate and massage the data into an analyst-friendly, tidy dataset.</p>
+<p>This included removing columns of junk data, such as those which contained mostly NA’s:</p>
+<p><code>{r} # Clean Up the Data ------------------------------------------------------- test$X       &lt;- NULL train$X      &lt;- NULL train.clean  &lt;- train[,colSums(is.na(train)) &lt; .5 * nrow(train)] test.clean   &lt;- test[,colSums(is.na(test)) &lt; .5 * nrow(test)]</code></p>
+<p>I saw no reason to keep columns in my training dataset that are not available in my prediction dataset, asides of course from the outcome variable:</p>
+<p>```{r} train.clean0 &lt;- train.clean[,colnames(train.clean) %in% colnames(test.clean)]</p>
+<p>train.clean0<span class="math">\(classe &lt;- train.clean\)</span>classe ```</p>
+<p>This allowed me to greatly reduce noise in the data – meaning I only have to consider about 1/3 of the number of columns that I began with.</p>
+</div>
+<div id="divide-labeled-data-into-training-and-testing" class="section level3">
+<h3>Divide Labeled Data into Training and Testing</h3>
+<p><code>{r} # Partition Labeled Data into Training and Testing ------------------------ # 60-40 Split inTrain       &lt;- createDataPartition(train$classe, p=0.6, list=FALSE) labeled.train &lt;- train[inTrain,] labeled.test  &lt;- train[-inTrain,]</code></p>
+</div>
+<div id="libraries-and-functions" class="section level2">
+<h2>Libraries and Functions</h2>
+<p>I called in a number of R packages (libraries), a subset of which was used in the final analysis, and defined one custom function.</p>
+<p>```{r} # Load Libraries ———————————————————- require(caret) require(data.table) require(MASS) require(mlogit) require(grid) require(gtable) require(rpart) require(rattle) require(sqldf) require(tm)</p>
+</div>
+</div>
+<div id="custom-functions" class="section level1">
+<h1>Custom Functions ——————————————————–</h1>
+<p>ml_write_files = function(x){ n = length(x) for(i in 1:n){ filename = paste0(“problem_id_”,i,“.txt”) write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE) } }</p>
+<p>```</p>
+<div id="model-building" class="section level2">
+<h2>Model Building</h2>
+<p>I tested a few different classification algorithms and packages during the model building phase.</p>
+</div>
+<div id="cross-validation" class="section level2">
+<h2>Cross Validation</h2>
+</div>
+<div id="expected-out-of-sample-error" class="section level2">
+<h2>Expected out of sample error</h2>
+</div>
+<div id="comments" class="section level2">
+<h2>Comments</h2>
 </div>
 </div>
 

@@ -10,8 +10,9 @@ require(MASS)
 require(mlogit)
 require(grid)
 require(gtable)
-require(rpart)
 require(rattle)
+require(randomForest)
+require(rpart)
 require(sqldf)
 require(tm)
 
@@ -24,3 +25,8 @@ ml_write_files = function(x){
   }
 }
 
+xyform <- function (y_var, x_vars) {
+  # y_var: a length-one character vector
+  # x_vars: a character vector of object names
+  as.formula(sprintf("%s ~ %s", y_var, paste(x_vars, collapse = " + ")))
+}

@@ -20,7 +20,40 @@ The scripts I used in this project are:
 
 ## Outcome
 The outcome variable was `classe`, which categorizes the manner in which exercisers completed their exercises.
- 
+
+## Libraries and Functions
+I called in a number of R packages (libraries), a subset of which was used in the final analysis, and defined 2 custom functions.
+
+```{r}
+# Load Libraries ----------------------------------------------------------
+require(caret)
+require(data.table)
+require(MASS)
+require(mlogit)
+require(grid)
+require(gtable)
+require(rpart)
+require(rattle)
+require(sqldf)
+require(tm)
+
+# Custom Functions --------------------------------------------------------
+ml_write_files = function(x){
+  n = length(x)
+  for(i in 1:n){
+    filename = paste0("problem_id_",i,".txt")
+    write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+  }
+}
+
+
+xyform <- function (y_var, x_vars) {
+  # y_var: a length-one character vector
+  # x_vars: a character vector of object names
+  as.formula(sprintf("%s ~ %s", y_var, paste(x_vars, collapse = " + ")))
+}
+```
+
 ## Getting the Data
 ### Reading Data
 The first step of this project was to import the test and training datasets from the Internet:
@@ -69,41 +102,60 @@ labeled.train <- train[inTrain,]
 labeled.test  <- train[-inTrain,]
 ```
 
-## Libraries and Functions
-I called in a number of R packages (libraries), a subset of which was used in the final analysis, and defined one custom function.
-
-```{r}
-# Load Libraries ----------------------------------------------------------
-require(caret)
-require(data.table)
-require(MASS)
-require(mlogit)
-require(grid)
-require(gtable)
-require(rpart)
-require(rattle)
-require(sqldf)
-require(tm)
-
-
-# Custom Functions --------------------------------------------------------
-ml_write_files = function(x){
-  n = length(x)
-  for(i in 1:n){
-    filename = paste0("problem_id_",i,".txt")
-    write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
-  }
-}
-
-```
-
 ## Model Building
 I tested a few different classification algorithms and packages during the model building phase.
 
+Namely:
 
+1. Multinomial logistic regression (via `mlogit`)  
+2. Decision tree classification  (via `rpart`)  
+3. Random Forest (via `randomForest`)  
 
-## Cross Validation
+```{r}
+# Using Multinomial Logistic Regression
+long = mlogit.data(labeled.train,shape="wide",choice="classe")
+logit.fit <- mlogit(classe ~ 0 | new_window + num_window + roll_belt + pitch_belt + 
+                      yaw_belt + total_accel_belt + gyros_belt_x + gyros_belt_y + 
+                      gyros_belt_z + accel_belt_x + accel_belt_y + accel_belt_z + 
+                      magnet_belt_x + magnet_belt_y + magnet_belt_z + roll_arm + 
+                      pitch_arm + yaw_arm + total_accel_arm + gyros_arm_x + gyros_arm_y + 
+                      gyros_arm_z + accel_arm_x + accel_arm_y + accel_arm_z + magnet_arm_x + 
+                      magnet_arm_y + magnet_arm_z + roll_dumbbell + pitch_dumbbell + 
+                      yaw_dumbbell + total_accel_dumbbell + gyros_dumbbell_x + 
+                      gyros_dumbbell_y + gyros_dumbbell_z + accel_dumbbell_x + 
+                      accel_dumbbell_y + accel_dumbbell_z + magnet_dumbbell_x + 
+                      magnet_dumbbell_y + magnet_dumbbell_z + roll_forearm + pitch_forearm + 
+                      yaw_forearm + total_accel_forearm + gyros_forearm_x + gyros_forearm_y + 
+                      gyros_forearm_z + accel_forearm_x + accel_forearm_y + accel_forearm_z + 
+                      magnet_forearm_x , data=long) 
 
-## Expected out of sample error 
+# Using rpart for Classification Desicision Trees
+rpart.fit <- rpart(classe ~ ., data=labeled.train, method="class") 
 
-## Comments
+# Using Random Forest 
+rf.fit <- randomForest(classe ~ ., data=labeled.train)
+```
+
+## Cross Validation and Expected out of sample error 
+My multinomial logit had a relatively high R-squared, but was less straightforward to compare with other algorithms due to lack of support for a  confusion matrix.
+
+```{r}
+test.long  <- mlogit.data(labeled.test,shape="wide",choice="classe")
+pred.logit <- predict(logit.fit, test.long)
+summary(logit.fit)
+summary(pred.logit)
+```
+
+My decision tree predictor has accuracy of about 85.8% - 87.3% (95% CI) with a Kappa value of about .83.
+
+```{r}
+pred.rpart <- predict(rpart.fit, labeled.test, type = "class")
+confusionMatrix(pred.rpart, labeled.test$classe)
+```
+My final and best performing prediction algorithm was random forest, with 99.75 - 99.93% accuracy (95% CI)
+
+```{r}
+pred.rf <- predict(rf.fit, labeled.test)
+confusionMatrix(pred.rf, labeled.test$classe)
+```
+
