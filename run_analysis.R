@@ -30,7 +30,7 @@ logit.fit <- mlogit(classe ~ 0 | new_window + num_window + roll_belt + pitch_bel
 rpart.fit <- rpart(classe ~ ., data = labeled.train, method = "class") 
 
 # Using Random Forest 
-rf.fit <- randomForest(classe ~ ., data = labeled.train, method = "class")
+rf.fit <- randomForest(classe ~ ., data = labeled.train)
 
 # Classifier Performance --------------------------------------------------
 # Quantitative
@@ -49,10 +49,9 @@ confusionMatrix(pred.rpart, labeled.test$classe)
 pred.rf <- predict(rf.fit, labeled.test)
 confusionMatrix(pred.rf, labeled.test$classe)
 
-# Visual
-fancyRpartPlot(logit.fit)
+# Visualization
 fancyRpartPlot(rpart.fit)
-fancyRpartPlot(rf.fit)
+plot(rf.fit)
 
 # Run Against Test Data ---------------------------------------------------
 result <- predict(rf.fit, test.clean, type = "class")

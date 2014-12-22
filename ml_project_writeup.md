@@ -2,7 +2,9 @@
 title: "ml_project_writeup.Rmd"
 author: "Jason D. Miller"
 date: "Sunday, December 21, 2014"
-output: html_document
+output:
+  html_document:
+    fig_caption: yes
 ---
 
 # Practical Machine Learning Project Writeup
@@ -24,8 +26,7 @@ The outcome variable was `classe`, which categorizes the manner in which exercis
 ## Libraries and Functions
 I called in a number of R packages (libraries), a subset of which was used in the final analysis, and defined 2 custom functions.
 
-```{r}
-# Load Libraries ----------------------------------------------------------
+```
 require(caret)
 require(data.table)
 require(MASS)
@@ -34,10 +35,7 @@ require(grid)
 require(gtable)
 require(rpart)
 require(rattle)
-require(sqldf)
-require(tm)
 
-# Custom Functions --------------------------------------------------------
 ml_write_files = function(x){
   n = length(x)
   for(i in 1:n){
@@ -58,14 +56,12 @@ xyform <- function (y_var, x_vars) {
 ### Reading Data
 The first step of this project was to import the test and training datasets from the Internet:
 
-```{r}
-# Grab from the Internet --------------------------------------------------
+```
 #download.file ("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv",
 #               destfile = "train.csv")
 #download.file("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv",
 #              destfile = "test.csv")
 
-# Read CSV's --------------------------------------------------------------
 train <- read.csv("train.csv")
 test  <- read.csv("test.csv")
 ```
@@ -75,8 +71,7 @@ The next step was to manipulate and massage the data into an analyst-friendly, t
 
 This included removing columns of junk data, such as those which contained mostly NA's:
 
-```{r}
-# Clean Up the Data -------------------------------------------------------
+```
 test$X       <- NULL
 train$X      <- NULL
 train.clean  <- train[,colSums(is.na(train)) < .5 * nrow(train)]
@@ -85,7 +80,7 @@ test.clean   <- test[,colSums(is.na(test)) < .5 * nrow(test)]
 
 I saw no reason to keep columns in my training dataset that are not available in my prediction dataset, asides of course from the outcome variable:
 
-```{r}
+```
 train.clean0 <- train.clean[,colnames(train.clean) %in% colnames(test.clean)]
 
 train.clean0$classe <- train.clean$classe
@@ -94,8 +89,7 @@ train.clean0$classe <- train.clean$classe
 This allowed me to greatly reduce noise in the data -- meaning I only have to consider about 1/3 of the number of columns that I began with.
 
 ### Divide Labeled Data into Training and Testing
-```{r}
-# Partition Labeled Data into Training and Testing ------------------------
+```
 # 60-40 Split
 inTrain       <- createDataPartition(train$classe, p=0.6, list=FALSE)
 labeled.train <- train[inTrain,]
@@ -111,7 +105,7 @@ Namely:
 2. Decision tree classification  (via `rpart`)  
 3. Random Forest (via `randomForest`)  
 
-```{r}
+```
 # Using Multinomial Logistic Regression
 long = mlogit.data(labeled.train,shape="wide",choice="classe")
 logit.fit <- mlogit(classe ~ 0 | new_window + num_window + roll_belt + pitch_belt + 
@@ -139,23 +133,36 @@ rf.fit <- randomForest(classe ~ ., data=labeled.train)
 ## Cross Validation and Expected out of sample error 
 My multinomial logit had a relatively high R-squared, but was less straightforward to compare with other algorithms due to lack of support for a  confusion matrix.
 
-```{r}
+```
 test.long  <- mlogit.data(labeled.test,shape="wide",choice="classe")
 pred.logit <- predict(logit.fit, test.long)
 summary(logit.fit)
 summary(pred.logit)
 ```
 
-My decision tree predictor has accuracy of about 85.8% - 87.3% (95% CI) with a Kappa value of about .83.
+My decision tree predictor has accuracy of about 85.8% - 87.3% (95% CI):
 
-```{r}
+```
 pred.rpart <- predict(rpart.fit, labeled.test, type = "class")
 confusionMatrix(pred.rpart, labeled.test$classe)
 ```
 My final and best performing prediction algorithm was random forest, with 99.75 - 99.93% accuracy (95% CI)
 
-```{r}
+```
 pred.rf <- predict(rf.fit, labeled.test)
 confusionMatrix(pred.rf, labeled.test$classe)
 ```
 
+## Visualization
+```
+fancyRpartPlot(rpart.fit)
+fancyRpartPlot(rf.fit)
+```
+
+## Prediction with Unlabeled Data
+Finally, I predicted the (unlabeled) test data with my best model, which was the random forest:
+
+```
+result <- predict(rf.fit, test.clean, type = "class")
+summary(result)
+```
