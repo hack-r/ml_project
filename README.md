@@ -5,6 +5,9 @@ date: "Sunday, December 21, 2014"
 output: html_document
 ---
 
+## Writeup
+The writeup for this project is ml_project_writeup.Rmd (equivalently ml_project_writeup.md and ml_project_writeup.html)
+
 ## About the Data
 The data used in this project are from the WLE dataset.
 
